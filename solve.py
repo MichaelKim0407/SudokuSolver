@@ -19,27 +19,11 @@ def log_rollback(func):
 def log_append(line, tabs):
     log.append("\t" * tabs + line)
 
-class Writer:
-    def __init__(self, outfile):
-        self.out = outfile
-        self.pr = False
-
-    def writeline(self, line, *args):
-        if args:
-            line = line.format(*args)
-        if self.pr:
-            print(line)
-        with open(self.out, "a") as f:
-            f.write(line + "\n")
-
-    def writelines(self, lines):
-        for line in lines:
-            self.writeline(line)
-
-writer = None
-
 import util
 from sudoku import Sudoku
+from output import Writer
+
+writer = None
 
 class Changed(Exception):
     def __init__(self, moveto):
@@ -197,7 +181,9 @@ def main(s):
 if __name__ == "__main__":
     from sys import argv
     if len(argv) <= 1:
-        print("README")
+        print("python solve.py $infile [$outfile]")
+        print("$infile: input file under in\\")
+        print("$outfile: output file under out\\, will be time by default")
     else:
         infile = os.path.join(IN, argv[1])
         with open(infile) as f:
