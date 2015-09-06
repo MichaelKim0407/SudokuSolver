@@ -1,6 +1,7 @@
 # Input and Output
 in/
-out/
+out/*
+!out/*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
