@@ -214,5 +214,7 @@ if __name__ == "__main__":
         import time
 
         outfile = os.path.join(OUT, argv[2] if len(argv) > 2 else time.strftime("%Y%m%d%H%M%S.txt"))
+        if os.path.exists(outfile):
+            os.remove(outfile)
         writer = Writer(outfile)
         main(s)
