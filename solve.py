@@ -6,6 +6,7 @@ OUT = os.path.join(PATH, "out")
 
 log = []
 
+
 def log_rollback(func):
     def log_safe(*args):
         global log
@@ -14,10 +15,13 @@ def log_rollback(func):
         if _changed == 0:
             log = backup
         return _changed
+
     return log_safe
+
 
 def log_append(line, tabs):
     log.append("\t" * tabs + line)
+
 
 import util
 from sudoku import Sudoku
@@ -25,17 +29,22 @@ from output import Writer
 
 writer = None
 
+
 class Changed(Exception):
     def __init__(self, moveto):
         self.moveto = moveto
 
+
 solve_methods = dict()
+
 
 def solve_method(index):
     def decor(func):
         solve_methods[index] = func
         return func
+
     return decor
+
 
 def section_remove(s, sec, numbers, tabs):
     result = 0
@@ -49,16 +58,18 @@ def section_remove(s, sec, numbers, tabs):
                 log_append("Reduced item[{0}] to {1}".format(i, s[i]), tabs)
     return result
 
+
 @log_rollback
 def _check_house(s, h, tabs=0):
     # Within a house, remove numbers already settled from unsettled tiled
     log_append("In House {0}:".format(h), tabs)
-    changed = section_remove(s, s.unsettled_tiles(h), s.settled_numbers(h), tabs+1)
+    changed = section_remove(s, s.unsettled_tiles(h), s.settled_numbers(h), tabs + 1)
     if changed == 2:
         # New settled numbers added
-        _check_house(s, h, tabs+1)
+        _check_house(s, h, tabs + 1)
     return changed
-                
+
+
 @solve_method(0)
 def check_house(s):
     changed = 0
@@ -67,12 +78,14 @@ def check_house(s):
     if changed == 2:
         raise Changed(0)
 
+
 def get_subsets(st):
     # Returns a list of all subsets
     result = [[]]
     for i in st:
         result += [s + [i] for s in result]
     return result
+
 
 @log_rollback
 def _check_group(s, h, tabs=0):
@@ -95,17 +108,19 @@ def _check_group(s, h, tabs=0):
                 # Group found!
                 @log_rollback
                 def rem():
-                    log_append("Group {0} contains {1}".format(subset, all_numbers), tabs+1)
-                    return section_remove(s, util.difference(unsettled_tiles, subset), all_numbers, tabs+2)
+                    log_append("Group {0} contains {1}".format(subset, all_numbers), tabs + 1)
+                    return section_remove(s, util.difference(unsettled_tiles, subset), all_numbers, tabs + 2)
+
                 changed = max(changed, rem())
     if changed > 0:
         # New group(s) were found
         # We should do the whole _check_group thing again
         # instead of waiting for another run in check_group
-        changed = max(changed, _check_group(s, h), tabs+1)
+        changed = max(changed, _check_group(s, h), tabs + 1)
         # Note that this is recursive,
         # so there should be no more new groups by now
     return changed
+
 
 @solve_method(1)
 def check_group(s):
@@ -117,27 +132,30 @@ def check_group(s):
     elif changed == 2:
         raise Changed(0)
 
+
 @log_rollback
 def _check_intersect(s, h1, h2, tabs=0):
     changed = 0
     log_append("In House {0} & {1}:".format(h1, h2), tabs)
-    inter = util.intersect(h1, h2) # intersection
-    h1u = util.difference(h1, h2) # h1 unique tiles
-    h2u = util.difference(h2, h1) # h2 unique tiles
-    h1un = s.get_numbers(h1u) # h1 unique numbers
-    h2un = s.get_numbers(h2u) # h2 unique numbers
-    h1i = Sudoku.other(h1un) # h1 intersect-only numbers
-    h2i = Sudoku.other(h2un) # h2 intersect-only numbers
-    hi = util.union(h1i, h2i) # intersect-only numbers
+    inter = util.intersect(h1, h2)  # intersection
+    h1u = util.difference(h1, h2)  # h1 unique tiles
+    h2u = util.difference(h2, h1)  # h2 unique tiles
+    h1un = s.get_numbers(h1u)  # h1 unique numbers
+    h2un = s.get_numbers(h2u)  # h2 unique numbers
+    h1i = Sudoku.other(h1un)  # h1 intersect-only numbers
+    h2i = Sudoku.other(h2un)  # h2 intersect-only numbers
+    hi = util.union(h1i, h2i)  # intersect-only numbers
     if len(hi) > 0:
         @log_rollback
         def rem():
-            log_append("Intersection contains {0}".format(hi), tabs+1)
-            return max(section_remove(s, h2u, h1i, tabs+2), section_remove(s, h1u, h2i, tabs+2))
+            log_append("Intersection contains {0}".format(hi), tabs + 1)
+            return max(section_remove(s, h2u, h1i, tabs + 2), section_remove(s, h1u, h2i, tabs + 2))
+
         changed = rem()
-#   if changed > 0:
-#       changed = max(_check_intersect(s, h1, h2, tabs+1))
+    #   if changed > 0:
+    #       changed = max(_check_intersect(s, h1, h2, tabs+1))
     return changed
+
 
 @solve_method(2)
 def check_intersect(s):
@@ -151,9 +169,11 @@ def check_intersect(s):
     elif changed == 2:
         raise Changed(0)
 
+
 def solve_methods_call(s, index):
     for i in range(index, len(solve_methods)):
         solve_methods[i](s)
+
 
 def solve(s):
     index = 0
@@ -164,6 +184,7 @@ def solve(s):
             index = c.moveto
         else:
             return s.is_completed()
+
 
 def main(s):
     writer.writeline("# Input")
@@ -178,8 +199,10 @@ def main(s):
     writer.writeline("# Log")
     writer.writelines(log)
 
+
 if __name__ == "__main__":
     from sys import argv
+
     if len(argv) <= 1:
         print("python solve.py $infile [$outfile]")
         print("$infile: input file under in\\")
@@ -189,6 +212,7 @@ if __name__ == "__main__":
         with open(infile) as f:
             s = Sudoku([line for line in f.readlines()])
         import time
+
         outfile = os.path.join(OUT, argv[2] if len(argv) > 2 else time.strftime("%Y%m%d%H%M%S.txt"))
         writer = Writer(outfile)
         main(s)

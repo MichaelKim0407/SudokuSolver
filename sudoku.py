@@ -1,5 +1,6 @@
 import util
 
+
 class Sudoku:
     def __init__(self, lines, houses=None):
         self.table = []
@@ -48,7 +49,7 @@ class Sudoku:
     def pr_houses(self):
         result = []
         for house in self.houses:
-            h_re = "";
+            h_re = ""
             for index in house:
                 h_re += "{0:>2d}, ".format(index)
             result.append(h_re[:-2])
@@ -81,7 +82,7 @@ class Sudoku:
 
     def unsettled_tiles(self, house):
         return [i for i in house if len(self.table[i]) != 1]
-        
+
     def settled_numbers(self, house):
         # return get_numbers(self.settled_tiles(house))
         return [self.table[i][0] for i in house if len(self.table[i]) == 1]
@@ -90,12 +91,15 @@ class Sudoku:
         # return get_numbers(self.unsettled_tiles(house))
         return Sudoku.other(self.settled_numbers(house))
 
+
 if __name__ == "__main__":
     from sys import argv
+
     if len(argv) <= 1:
         lines = "123456789,456789123,789123456,234567891,5678?1234,891234567,345678912,678912345,912345678".split(",")
     else:
         import os
+
         with open(os.path.join("in", argv[1])) as f:
             lines = f.readlines()
     s = Sudoku(lines)
