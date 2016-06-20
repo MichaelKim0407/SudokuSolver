@@ -1,32 +1,15 @@
 import os
 
+import util
+from output import Writer
+from solve_log import Log
+from sudoku import Sudoku
+
 PATH = os.path.dirname(os.path.abspath(__file__))
 IN = os.path.join(PATH, "in")
 OUT = os.path.join(PATH, "out")
 
-log = []
-
-
-def log_rollback(func):
-    def log_safe(*args):
-        global log
-        backup = list(log)
-        _changed = func(*args)
-        if _changed == 0:
-            log = backup
-        return _changed
-
-    return log_safe
-
-
-def log_append(line, tabs):
-    log.append("\t" * tabs + line)
-
-
-import util
-from sudoku import Sudoku
-from output import Writer
-
+log = Log()
 writer = None
 
 
@@ -46,27 +29,31 @@ def solve_method(index):
     return decor
 
 
-def section_remove(s, sec, numbers, tabs):
+def section_remove(s, sec, numbers):
     result = 0
     for i in sec:
         if s.remove_numbers(i, numbers):
             result = max(result, 1)
             if len(s[i]) == 1:
                 result = 2
-                log_append("Filled item[{0}] = {1}".format(i, s[i][0]), tabs)
+                log.append("Filled item[{0}] = {1}".format(i, s[i][0]))
             else:
-                log_append("Reduced item[{0}] to {1}".format(i, s[i]), tabs)
+                log.append("Reduced item[{0}] to {1}".format(i, s[i]))
     return result
 
 
-@log_rollback
-def _check_house(s, h, tabs=0):
+@log.rollback
+def _check_house(s, h):
     # Within a house, remove numbers already settled from unsettled tiled
-    log_append("In House {0}:".format(h), tabs)
-    changed = section_remove(s, s.unsettled_tiles(h), s.settled_numbers(h), tabs + 1)
+    log.append("In House {0}:".format(h))
+    log.indent()
+    changed = section_remove(s, s.unsettled_tiles(h), s.settled_numbers(h))
+    log.dedent()
     if changed == 2:
         # New settled numbers added
-        _check_house(s, h, tabs + 1)
+        log.indent()
+        _check_house(s, h)
+        log.dedent()
     return changed
 
 
@@ -87,15 +74,15 @@ def get_subsets(st):
     return result
 
 
-@log_rollback
-def _check_group(s, h, tabs=0):
+@log.rollback
+def _check_group(s, h):
     # Within a house, find groups for unsettled numbers
     # A group is N tiles where only N unsettled numbers can exist
     # Thus these N unsettled numbers cannot be on any other tile
     # For example, if there are three unsettled tiles in a house
     # [4, 7], [4, 7], [4, 6, 7]
     # Then the first two tiles make a group, and the third one can only be [6]
-    log_append("In House {0}:".format(h), tabs)
+    log.append("In House {0}:".format(h))
     changed = 0
     unsettled_tiles = s.unsettled_tiles(h)
     subsets = get_subsets(unsettled_tiles)
@@ -106,17 +93,23 @@ def _check_group(s, h, tabs=0):
             all_numbers = s.get_numbers(subset)
             if len(all_numbers) == size:
                 # Group found!
-                @log_rollback
+                @log.rollback
                 def rem():
-                    log_append("Group {0} contains {1}".format(subset, all_numbers), tabs + 1)
-                    return section_remove(s, util.difference(unsettled_tiles, subset), all_numbers, tabs + 2)
+                    log.indent()
+                    log.append("Group {0} contains {1}".format(subset, all_numbers))
+                    log.indent()
+                    result = section_remove(s, util.difference(unsettled_tiles, subset), all_numbers)
+                    log.dedent(2)
+                    return result
 
                 changed = max(changed, rem())
     if changed > 0:
         # New group(s) were found
         # We should do the whole _check_group thing again
         # instead of waiting for another run in check_group
-        changed = max(changed, _check_group(s, h), tabs + 1)
+        log.indent()
+        changed = max(changed, _check_group(s, h))
+        log.dedent()
         # Note that this is recursive,
         # so there should be no more new groups by now
     return changed
@@ -133,10 +126,10 @@ def check_group(s):
         raise Changed(0)
 
 
-@log_rollback
-def _check_intersect(s, h1, h2, tabs=0):
+@log.rollback
+def _check_intersect(s, h1, h2):
     changed = 0
-    log_append("In House {0} & {1}:".format(h1, h2), tabs)
+    log.append("In House {0} & {1}:".format(h1, h2))
     inter = util.intersect(h1, h2)  # intersection
     h1u = util.difference(h1, h2)  # h1 unique tiles
     h2u = util.difference(h2, h1)  # h2 unique tiles
@@ -146,14 +139,16 @@ def _check_intersect(s, h1, h2, tabs=0):
     h2i = Sudoku.other(h2un)  # h2 intersect-only numbers
     hi = util.union(h1i, h2i)  # intersect-only numbers
     if len(hi) > 0:
-        @log_rollback
+        @log.rollback
         def rem():
-            log_append("Intersection contains {0}".format(hi), tabs + 1)
-            return max(section_remove(s, h2u, h1i, tabs + 2), section_remove(s, h1u, h2i, tabs + 2))
+            log.indent()
+            log.append("Intersection contains {0}".format(hi))
+            log.indent()
+            result = max(section_remove(s, h2u, h1i), section_remove(s, h1u, h2i))
+            log.dedent(2)
+            return result
 
         changed = rem()
-    #   if changed > 0:
-    #       changed = max(_check_intersect(s, h1, h2, tabs+1))
     return changed
 
 
@@ -197,7 +192,7 @@ def main(s):
     writer.writeline("")
     writer.pr = False
     writer.writeline("# Log")
-    writer.writelines(log)
+    writer.writelines(log.l)
 
 
 if __name__ == "__main__":
