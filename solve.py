@@ -130,16 +130,6 @@ def check_group(s):
 
 @log.rollback
 def _check_intersect(s, h1, h2):
-    # Example:
-    # 123***ABC
-    # ***4*****
-    # DEF***GHI
-    # In the left 3x3 block, one of DEF must be 4
-    # Thus, in the 3rd row, GHI cannot be 4
-    # Thus, we can know that one of ABC must be 4
-    # (Note that this conclusion cannot be reached
-    # if we only look at the first row or the right 3x3 block)
-    #
     # When two houses intersect,
     # some numbers cannot at the same time be outside of the intersection
     # Thus they must be inside the intersection
