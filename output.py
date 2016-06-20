@@ -1,4 +1,7 @@
-class Writer:
+__author__ = 'Michael'
+
+
+class Writer(object):
     def __init__(self, save, pr=False, save_as=None):
         self.pr = pr
         self.save = save

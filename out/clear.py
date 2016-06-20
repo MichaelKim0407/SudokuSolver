@@ -1,5 +1,7 @@
 import os
 
+__author__ = 'Michael'
+
 file = os.path.abspath(__file__)
 
 for f in os.listdir(os.path.dirname(file)):

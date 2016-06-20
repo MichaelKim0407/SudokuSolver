@@ -5,6 +5,8 @@ from output import Writer
 from solve_log import Log
 from sudoku import Sudoku
 
+__author__ = 'Michael'
+
 PATH = os.path.dirname(os.path.abspath(__file__))
 IN = os.path.join(PATH, "in")
 OUT = os.path.join(PATH, "out")

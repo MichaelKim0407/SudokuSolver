@@ -1,7 +1,7 @@
 __author__ = 'Michael'
 
 
-class Log:
+class Log(object):
     def __init__(self):
         self.l = []
         self.tabs = 0

@@ -1,3 +1,6 @@
+__author__ = 'Michael'
+
+
 def unique(li):
     return list(set(li))
 

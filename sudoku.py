@@ -1,7 +1,9 @@
 import util
 
+__author__ = 'Michael'
 
-class Sudoku:
+
+class Sudoku(object):
     def __init__(self, lines, houses=None):
         self.table = []
         for y in range(9):
