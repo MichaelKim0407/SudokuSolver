@@ -36,16 +36,16 @@ def section_remove(s, sec, numbers):
             result = max(result, 1)
             if len(s[i]) == 1:
                 result = 2
-                log.append("Filled item[{0}] = {1}".format(i, s[i][0]))
+                log.append("Filled item[{0}] = {1}", i, s[i][0])
             else:
-                log.append("Reduced item[{0}] to {1}".format(i, s[i]))
+                log.append("Reduced item[{0}] to {1}", i, s[i])
     return result
 
 
 @log.rollback
 def _check_house(s, h):
     # Within a house, remove numbers already settled from unsettled tiled
-    log.append("In House {0}:".format(h))
+    log.append("In House {0}:", h)
     log.indent()
     changed = section_remove(s, s.unsettled_tiles(h), s.settled_numbers(h))
     log.dedent()
@@ -82,7 +82,7 @@ def _check_group(s, h):
     # For example, if there are three unsettled tiles in a house
     # [4, 7], [4, 7], [4, 6, 7]
     # Then the first two tiles make a group, and the third one can only be [6]
-    log.append("In House {0}:".format(h))
+    log.append("In House {0}:", h)
     changed = 0
     unsettled_tiles = s.unsettled_tiles(h)
     subsets = get_subsets(unsettled_tiles)
@@ -96,7 +96,7 @@ def _check_group(s, h):
                 @log.rollback
                 def rem():
                     log.indent()
-                    log.append("Group {0} contains {1}".format(subset, all_numbers))
+                    log.append("Group {0} contains {1}", subset, all_numbers)
                     log.indent()
                     result = section_remove(s, util.difference(unsettled_tiles, subset), all_numbers)
                     log.dedent(2)
@@ -129,7 +129,7 @@ def check_group(s):
 @log.rollback
 def _check_intersect(s, h1, h2):
     changed = 0
-    log.append("In House {0} & {1}:".format(h1, h2))
+    log.append("In House {0} & {1}:", h1, h2)
     inter = util.intersect(h1, h2)  # intersection
     h1u = util.difference(h1, h2)  # h1 unique tiles
     h2u = util.difference(h2, h1)  # h2 unique tiles
@@ -142,7 +142,7 @@ def _check_intersect(s, h1, h2):
         @log.rollback
         def rem():
             log.indent()
-            log.append("Intersection contains {0}".format(hi))
+            log.append("Intersection contains {0}", hi)
             log.indent()
             result = max(section_remove(s, h2u, h1i), section_remove(s, h1u, h2i))
             log.dedent(2)

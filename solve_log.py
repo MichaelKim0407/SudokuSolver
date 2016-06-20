@@ -6,7 +6,9 @@ class Log:
         self.l = []
         self.tabs = 0
 
-    def append(self, line):
+    def append(self, line, *args, **kwargs):
+        if args or kwargs:
+            line = line.format(*args, **kwargs)
         self.l.append("\t" * self.tabs + line)
 
     def indent(self, i=1):
